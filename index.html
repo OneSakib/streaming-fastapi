@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Stream Log Viewer</title>
+    <style>
+      body {
+        font-family: monospace;
+        background: #111;
+        color: #0f0;
+        padding: 20px;
+      }
+      #log {
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Live Book Stream</h2>
+    <div id="book"></div>
+
+    <script>
+      const bookDiv = document.getElementById("book");
+
+      fetch("http://localhost:8000/read-book") // Stream URL from FastAPI
+        .then((response) => {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+
+          function readChunk() {
+            reader.read().then(({ done, value }) => {
+              if (done) {
+                bookDiv.innerHTML += "\n\n[End of Stream]";
+                return;
+              }
+
+              const text = decoder.decode(value, { stream: true });
+              bookDiv.innerHTML += text; // Append to book
+              bookDiv.scrollTop = bookDiv.scrollHeight; // Auto-scroll
+              readChunk(); // Read next chunk
+            });
+          }
+
+          readChunk();
+        });
+    </script>
+  </body>
+</html>
